@@ -146,32 +146,55 @@ const Sell = (props) => {
           <div className="p-6 pl-8 pr-8 pb-8">
             <p className="font-bold text-lg mb-3">Sell Item</p>
             <form onSubmit={handleSubmit}>
-              <Input
-                setInput={setTitle}
-                placeholder="Title"
-                value={title}
-                type="text"
-              />
-              <Input
-                setInput={setCategory}
-                placeholder="Category"
-                value={category}
-                type="text"
-              />
-              <Input
-                setInput={setPrice}
-                placeholder="Price"
-                value={price}
-                type="number"
-                min="0"
-                step="0.01"
-              />
-              <Input
-                setInput={setDescription}
-                placeholder="Description"
-                value={description}
-                type="text"
-              />
+              {/* Title Input */}
+              <div className="mb-4">
+                <input
+                  type="text"
+                  placeholder="Title"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="w-full p-3 border-2 border-gray-300 rounded-md focus:outline-none focus:border-teal-300 placeholder-gray-500"
+                  required
+                />
+              </div>
+
+             
+              <div className="mb-4">
+                <input
+                  type="text"
+                  placeholder="Category"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="w-full p-3 border-2 border-gray-300 rounded-md focus:outline-none focus:border-teal-300 placeholder-gray-500"
+                  required
+                />
+              </div>
+
+            
+              <div className="mb-4">
+                <input
+                  type="number"
+                  placeholder="Price"
+                  value={price}
+                  onChange={(e) => setPrice(e.target.value)}
+                  min="0"
+                  step="0.01"
+                  className="w-full p-3 border-2 border-gray-300 rounded-md focus:outline-none focus:border-teal-300 placeholder-gray-500"
+                  required
+                />
+              </div>
+
+              
+              <div className="mb-4">
+                <textarea
+                  placeholder="Description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  rows={4}
+                  className="w-full p-3 border-2 border-gray-300 rounded-md focus:outline-none focus:border-teal-300 placeholder-gray-500 resize-vertical"
+                  required
+                />
+              </div>
 
               <div className="pt-2 w-full relative"> 
                 {image ? (

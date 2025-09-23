@@ -1,3 +1,4 @@
+import { useState } from "react";
 import "./navBar.css";
 import arrow from "../../assets/arrow-down.svg";
 import search from "../../assets/search.svg";
@@ -5,10 +6,26 @@ import symbol from "../../assets/symbol.png";
 import addButton from "../../assets/addButton.png";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "../Firbase/firebase";
+import { signOut } from "firebase/auth";
 
 export const NavBar = (props) => {
   const [user] = useAuthState(auth);
+  const [showDropdown, setShowDropdown] = useState(false);
   const { toggleModal, toggleSellModal } = props;
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+      setShowDropdown(false);
+      console.log("User logged out successfully");
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+  };
+
+  const toggleDropdown = () => {
+    setShowDropdown(!showDropdown);
+  };
 
   return (
     <nav>
@@ -68,13 +85,41 @@ export const NavBar = (props) => {
             Login
           </p>
         ) : (
-          <div className="relative">
-            <p
-              style={{ color: "#002f34" }}
-              className="font-bold ml-5 cursor-pointer"
+          <div className="relative ml-5">
+            <div
+              className="flex items-center cursor-pointer"
+              onClick={toggleDropdown}
             >
-              {user.displayName?.split(" ")[0]}
-            </p>
+              <p
+                style={{ color: "#002f34" }}
+                className="font-bold"
+              >
+                {user.displayName?.split(" ")[0]}
+              </p>
+              <img 
+                src={arrow} 
+                alt="dropdown arrow" 
+                className={`w-3 ml-1 transition-transform duration-200 ${showDropdown ? 'rotate-180' : ''}`}
+              />
+            </div>
+            
+          
+            {showDropdown && (
+              <div className="absolute top-full right-0 mt-1 w-40 bg-white border border-gray-200 rounded-md shadow-lg z-[9999]">
+                <div className="py-2">
+                  <div className="px-4 py-2 border-b border-gray-100">
+                    <p className="text-sm font-medium text-gray-700">{user.displayName}</p>
+                    <p className="text-xs text-gray-500">{user.email}</p>
+                  </div>
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors duration-200"
+                  >
+                    Logout
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -104,6 +149,14 @@ export const NavBar = (props) => {
           <li>For rent : Houses & Apartments</li>
         </ul>
       </div>
+      
+      
+      {showDropdown && (
+        <div 
+          className="fixed inset-0 z-40" 
+          onClick={() => setShowDropdown(false)}
+        />
+      )}
     </nav>
   );
 };
