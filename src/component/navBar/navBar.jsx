@@ -7,6 +7,7 @@ import addButton from "../../assets/addButton.png";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "../Firbase/firebase";
 import { signOut } from "firebase/auth";
+import { Link } from "react-router-dom";
 
 export const NavBar = (props) => {
   const [user] = useAuthState(auth);
@@ -17,7 +18,7 @@ export const NavBar = (props) => {
     try {
       await signOut(auth);
       setShowDropdown(false);
-      console.log("User logged out successfully");
+    
     } catch (error) {
       console.error("Error logging out:", error);
     }
@@ -31,7 +32,9 @@ export const NavBar = (props) => {
     <nav>
       <div className="fixed top-0 z-50 w-[350px] sm:w-[600px] md:w-[900px] lg:w-[1100px] xl:w-[1500px] mx-auto overflow-auto p-2 shadow-md bg-slate-100 border-b-4 border-white flex items-center rounded-md">
      
-        <img src={symbol} alt="logo" className="w-10 sm:w-12" />
+        <Link to="/">
+          <img src={symbol} alt="logo" className="w-10 sm:w-12 cursor-pointer" />
+        </Link>
 
        
         <div className="relative ml-3 sm:ml-5 location-search">
@@ -105,12 +108,19 @@ export const NavBar = (props) => {
             
           
             {showDropdown && (
-              <div className="absolute top-full right-0 mt-1 w-40 bg-white border border-gray-200 rounded-md shadow-lg z-[9999]">
+              <div className="absolute top-full right-0 mt-1 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-[9999]">
                 <div className="py-2">
                   <div className="px-4 py-2 border-b border-gray-100">
                     <p className="text-sm font-medium text-gray-700">{user.displayName}</p>
                     <p className="text-xs text-gray-500">{user.email}</p>
                   </div>
+                  <Link
+                    to="/my-ads"
+                    onClick={() => setShowDropdown(false)}
+                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors duration-200"
+                  >
+                    My Ads
+                  </Link>
                   <button
                     onClick={handleLogout}
                     className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors duration-200"

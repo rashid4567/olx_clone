@@ -1,55 +1,42 @@
 import { Modal, ModalBody } from "flowbite-react";
 import React, { useState } from "react";
-
-import { userAuth } from "../context/authcontext";
-import {
-  db,
-  addDoc,
-  collection,
-  fetchFromFireStore,
-  serverTimestamp,
-} from "../Firbase/firebase";
+import { doc, updateDoc } from "firebase/firestore";
+import { db } from "../Firbase/firebase";
 import fileUpload from "../../assets/fileUpload.svg";
 import loading from "../../assets/loading.gif";
 import close from "../../assets/close.svg";
 
-const Sell = (props) => {
-  const [title, setTitle] = useState("");
-  const [category, setCategory] = useState("");
-  const [price, setPrice] = useState("");
-  const [description, setDescription] = useState("");
+const EditModal = ({ item, onClose, onUpdateSuccess }) => {
+  const [title, setTitle] = useState(item.title);
+  const [category, setCategory] = useState(item.category);
+  const [price, setPrice] = useState(item.price.toString());
+  const [description, setDescription] = useState(item.description);
   const [submitting, setSubmitting] = useState(false);
   const [image, setImage] = useState(null);
-  const { toggleSellModal, status, setItems } = props;
-
-  const auth = userAuth();
+  const [currentImageUrl, setCurrentImageUrl] = useState(item.imageUrl);
 
   const handleImageUpload = (e) => {
-    if (e.target.files) setImage(e.target.files[0]);
+    if (e.target.files && e.target.files[0]) {
+      setImage(e.target.files[0]);
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!auth.user) {
-      alert("Please login to continue");
-      return;
-    }
-
     setSubmitting(true);
 
     const readImageAsDataUrl = (file) => {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onloadend = () => {
-          const imageUrl = reader.result;
-          resolve(imageUrl);
+          resolve(reader.result);
         };
         reader.onerror = reject;
         reader.readAsDataURL(file);
       });
     };
 
-    let imageUrl = "";
+    let imageUrl = currentImageUrl;
     if (image) {
       try {
         imageUrl = await readImageAsDataUrl(image);
@@ -84,36 +71,36 @@ const Sell = (props) => {
     }
 
     try {
-      await addDoc(collection(db, "products"), {
+      const itemRef = doc(db, "products", item.id);
+      const updatedData = {
         title: trimmedTitle,
         category: trimmedCategory,
         price: Number(trimmedPrice),
         description: trimmedDescription,
         imageUrl,
-        userId: auth.user.uid,
-        userName: auth.user.displayName || "Anonymous",
-        createdAt: serverTimestamp(),
-      });
+        updatedAt: new Date().toDateString(),
+      };
 
-      setTitle("");
-      setCategory("");
-      setPrice("");
-      setDescription("");
-      setImage(null);
+      await updateDoc(itemRef, updatedData);
 
-      if (setItems) {
-        const datas = await fetchFromFireStore();
-        setItems(datas);
-      }
+      const updatedItem = {
+        ...item,
+        ...updatedData,
+      };
 
-      alert("Item listed successfully!");
-      toggleSellModal();
+      alert("Item updated successfully!");
+      onUpdateSuccess(updatedItem);
     } catch (error) {
-      console.error("Error adding document: ", error);
-      alert("Failed to add item. Please try again.");
+      console.error("Error updating document: ", error);
+      alert("Failed to update item. Please try again.");
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const removeImage = () => {
+    setImage(null);
+    setCurrentImageUrl("");
   };
 
   return (
@@ -126,9 +113,9 @@ const Sell = (props) => {
               "relative flex max-h-[90dvh] flex-col rounded-lg bg-white shadow dark:bg-gray-700",
           },
         }}
-        onClick={toggleSellModal}
+        onClick={onClose}
         position={"center"}
-        show={status}
+        show={true}
         className="bg-black"
         size="md"
         popup={true}
@@ -138,17 +125,15 @@ const Sell = (props) => {
           onClick={(e) => e.stopPropagation()}
         >
           <img
-            onClick={() => {
-              toggleSellModal();
-              setImage(null);
-            }}
+            onClick={onClose}
             src={close}
             alt="close_btn"
             className="w-6 absolute z-10 top-6 right-8 cursor-pointer"
           />
           <div className="p-6 pl-8 pr-8 pb-8">
-            <p className="font-bold text-lg mb-3">Sell Item</p>
+            <p className="font-bold text-lg mb-3">Edit Item</p>
             <form onSubmit={handleSubmit}>
+              {/* Title Input */}
               <div className="mb-4">
                 <input
                   type="text"
@@ -196,16 +181,16 @@ const Sell = (props) => {
               </div>
 
               <div className="pt-2 w-full relative">
-                {image ? (
+                {image || currentImageUrl ? (
                   <div className="relative h-40 sm:h-60 w-full flex justify-center border-2 border-black border-solid rounded-md overflow-hidden">
                     <img
                       className="object-contain"
-                      src={URL.createObjectURL(image)}
+                      src={image ? URL.createObjectURL(image) : currentImageUrl}
                       alt="Selected"
                     />
                     <button
                       type="button"
-                      onClick={() => setImage(null)}
+                      onClick={removeImage}
                       className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600"
                     >
                       ×
@@ -218,7 +203,6 @@ const Sell = (props) => {
                       type="file"
                       accept="image/*"
                       className="absolute inset-0 h-full w-full opacity-0 cursor-pointer z-30"
-                      required
                     />
                     <div className="absolute top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] flex flex-col items-center">
                       <img className="w-12" src={fileUpload} alt="Upload" />
@@ -240,13 +224,20 @@ const Sell = (props) => {
                   />
                 </div>
               ) : (
-                <div className="w-full pt-2">
+                <div className="w-full pt-2 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="flex-1 p-3 rounded-lg text-gray-600 border-2 border-gray-300 hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
                   <button
                     type="submit"
-                    className="w-full p-3 rounded-lg text-white hover:opacity-90 transition-opacity"
+                    className="flex-1 p-3 rounded-lg text-white hover:opacity-90 transition-opacity"
                     style={{ backgroundColor: "#002f34" }}
                   >
-                    Sell Item
+                    Update Item
                   </button>
                 </div>
               )}
@@ -258,4 +249,4 @@ const Sell = (props) => {
   );
 };
 
-export default Sell;
+export default EditModal;

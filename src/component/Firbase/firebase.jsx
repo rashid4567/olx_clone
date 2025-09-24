@@ -2,7 +2,18 @@ import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getStorage } from "firebase/storage";
-import { getFirestore, collection, getDocs, addDoc } from "firebase/firestore";
+import { 
+  getFirestore, 
+  collection, 
+  getDocs, 
+  addDoc, 
+  serverTimestamp,
+  doc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where
+} from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -13,7 +24,6 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
-
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -26,11 +36,19 @@ const fetchFromFireStore = async () => {
   try {
     const productsCollection = collection(db, "products");
     const productSnapshot = await getDocs(productsCollection);
-    const productList = productSnapshot.docs.map((doc) => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-    console.log("Fetched products from Firestore:", productList);
+    const productList = productSnapshot.docs.map((doc) => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        ...data,
+       
+        price: typeof data.price === 'number' ? data.price : parseFloat(data.price) || 0,
+        
+        createdAt: data.createdAt || null,
+        updatedAt: data.updatedAt || null,
+      };
+    });
+   
     return productList;
   } catch (err) {
     console.error("Unable to fetch the data", err);
@@ -38,4 +56,21 @@ const fetchFromFireStore = async () => {
   }
 };
 
-export { app, auth, provider, analytics, storage, db, fetchFromFireStore, addDoc, collection };
+export { 
+  app, 
+  auth, 
+  provider, 
+  analytics, 
+  storage, 
+  db, 
+  fetchFromFireStore, 
+  addDoc, 
+  collection,
+  serverTimestamp,
+  doc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  getDocs
+};

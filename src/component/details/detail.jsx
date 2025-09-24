@@ -1,93 +1,111 @@
-import React, { useState } from 'react'
-import { useLocation } from 'react-router-dom'
-import { ItemsContext } from "../context/item"
-import { NavBar } from '../navBar/navBar';
-import Login from '../modal/login';
-import Sell from '../modal/sell';
+import React from 'react';
+import { useLocation, Link } from 'react-router-dom';
+
+const formatFirestoreDate = (timestamp) => {
+  if (!timestamp) return "No date";
+  if (typeof timestamp === 'string') return timestamp;
+  if (timestamp && typeof timestamp === 'object' && timestamp.seconds) {
+    const date = new Date(timestamp.seconds * 1000);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  }
+  if (timestamp instanceof Date) {
+    return timestamp.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  }
+  return "";
+};
 
 const Detail = () => {
-    const location = useLocation();
-    const { item } = location.state || {};
+  const location = useLocation();
+  const { item } = location.state || {};
 
-    const [openModal, setOpenModal] = useState(false);
-    const [sellModal, setSellModal] = useState(false);
+  console.log('Detail component received item:', item);
 
-    const itemsCtx = ItemsContext();
-    
-    const toggleModal = () => setOpenModal(!openModal);
-    const toggleModalSell = () => setSellModal(!sellModal);
-
-
-    if (!item) {
-        return (
-            <div>
-                <NavBar toggleModalSell={toggleModalSell} toggleModal={toggleModal} />
-                <Login toggleModal={toggleModal} status={openModal} />
-                <div className="p-10 text-center">
-                    <p className="text-xl font-bold text-gray-600">No item found</p>
-                    <p className="text-gray-500">Please go back and select an item</p>
-                </div>
-                <Sell 
-                    setItems={itemsCtx?.setItems} 
-                    toggleSellModal={toggleModalSell} 
-                    status={sellModal} 
-                />
-            </div>
-        );
-    }
-
+  if (!item) {
     return (
-        <div>
-            <NavBar toggleModalSell={toggleModalSell} toggleModal={toggleModal} />
-            <Login toggleModal={toggleModal} status={openModal} />
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold mb-4">Item not found</h2>
+          <Link to="/" className="text-blue-500 hover:underline">
+            Go back to home
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
-            <div className="grid gap-0 sm:gap-5 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 p-10 px-5 sm:px-15 md:px-30 lg:px-40">
-                <div className="border-2 w-full rounded-lg flex justify-center overflow-hidden h-96">
-                    {item.imageUrl ? (
-                        <img 
-                            className="object-cover w-full" 
-                            src={item.imageUrl} 
-                            alt={item.title || 'Product image'} 
-                        />
-                    ) : (
-                        <div className="flex items-center justify-center w-full h-full bg-gray-100">
-                            <p className="text-gray-500">No image available</p>
-                        </div>
-                    )}
-                </div>
-                
-                <div className="flex flex-col relative w-full">
-                    <p className="p-1 pl-0 text-2xl font-bold">
-                        ₹ {item.price ? Number(item.price).toLocaleString('en-IN') : 'N/A'}
-                    </p>
-                    <p className="p-1 pl-0 text-base text-gray-600">
-                        {item.category || 'Uncategorized'}
-                    </p>
-                    <p className="p-1 pl-0 text-xl font-bold">
-                        {item.title || 'No title'}
-                    </p>
-                    <p className="p-1 pl-0 sm:pb-0 break-words text-ellipsis overflow-hidden w-full text-gray-700">
-                        {item.description || 'No description available'}
-                    </p>
-                    
-                    <div className="w-full relative sm:relative md:absolute bottom-0 flex justify-between mt-4 md:mt-0">
-                        <p className="p-1 pl-0 font-bold text-gray-800">
-                            Seller: {item.userName || 'Anonymous'}
-                        </p>
-                        <p className="p-1 pl-0 text-sm text-gray-500">
-                            {item.createdAt || 'Date not available'}
-                        </p>
-                    </div>
-                </div>
+  return (
+    <div className="min-h-screen bg-gray-50 pt-24">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <Link to="/" className="text-blue-600 hover:text-blue-800 mb-6 inline-block">
+          ← Back to listings
+        </Link>
+        
+        <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+          <div className="md:flex">
+           
+            <div className="md:w-1/2">
+              <img
+                className="w-full h-96 object-contain bg-gray-100"
+                src={item.imageUrl || 'https://via.placeholder.com/400x300'}
+                alt={item.title || 'Product'}
+              />
             </div>
 
-            <Sell 
-                setItems={itemsCtx?.setItems} 
-                toggleSellModal={toggleModalSell} 
-                status={sellModal} 
-            />
-        </div>
-    )
-}
+         
+            <div className="md:w-1/2 p-8">
+              <h1 className="text-3xl font-bold mb-4" style={{ color: '#002f34' }}>
+                {item.title || 'No title'}
+              </h1>
+              
+              <div className="mb-6">
+                <span className="text-4xl font-bold" style={{ color: '#002f34' }}>
+                  ₹ {item.price?.toLocaleString() || '0'}
+                </span>
+              </div>
 
-export default Detail
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Category</h3>
+                  <p className="text-gray-600">{item.category || 'No category'}</p>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Description</h3>
+                  <p className="text-gray-600">{item.description || 'No description'}</p>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Seller</h3>
+                  <p className="text-gray-600">{item.userName || 'Anonymous'}</p>
+                </div>
+
+                <div>
+                  <h3 className="text-lg font-semibold mb-2">Posted On</h3>
+                  <p className="text-gray-600">{formatFirestoreDate(item.createdAt)}</p>
+                </div>
+              </div>
+
+              <div className="mt-8">
+                <button 
+                  className="w-full bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+                >
+                  Contact Seller
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Detail;
