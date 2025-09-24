@@ -14,6 +14,7 @@ import { Link } from "react-router-dom";
 import EditModal from "../modal/edit";
 import loading from "../../assets/loading.gif";
 import { formatFirestoreDate } from "../../utils/dateUtils";
+import { NavBar } from "../NavBar/navBar";
 
 const MyAds = () => {
   const [myItems, setMyItems] = useState([]);
@@ -137,6 +138,8 @@ const MyAds = () => {
   }
 
   return (
+    <>
+    <NavBar/>
     <div className="min-h-screen bg-gray-50 pt-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center mb-8">
@@ -253,6 +256,7 @@ const MyAds = () => {
         />
       )}
     </div>
+    </>
   );
 };
 
